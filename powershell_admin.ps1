@@ -1,3 +1,5 @@
+#Requires -RunAsAdministrator
+
 <# Exploring the depths of powershell #>
 
 <# 1. List multiple ways to extract a service by name #>
@@ -69,7 +71,6 @@ function changePassword([String]$username, [String]$password) {
 }
 
 function testUserManipulation {
-    write "[+] You must be running this program as administrator"
     write "[+] Adding user johnnysmoke with password secretpassword1"
     addUser "johnnysmoke" "secretpassword1"
     net user 
@@ -145,6 +146,14 @@ function removeFile([String]$filename) {
     rm $filename -force
 }
 
+function copyFile([String]$sourcePath, [String]$destinationPath) {
+    cp $sourcePath $destinationPath
+}
+
+function renameOrMoveFile([String]$sourcePath, [String]$destinationPath) {
+    mv $sourcePath $destinationPath
+}
+
 function testFileManagement {
 
 }
@@ -154,11 +163,57 @@ function testCsharpEnvironment {
 
 }
 
+<# Random Utility Functions #>
+function windowsIdentityInfo {
+    return [System.Security.Principal.WindowsIdentity]::GetCurrent()
+}
+
+function windowsIdentityName {
+    return (windowsIdentityInfo).name
+}
+
+function windowsIdentityGroups {
+    return (windowsIdentityInfo).groups 
+}
+
+function isAdminV1 {
+    $user = windowsIdentityName
+    if ((windowsIdentityInfo).groups -match "S-1-5-32-544") {
+        write "[+] User $user is Admin."
+    } else {
+        write "[+] User $user is not Admin"
+    }
+}
+
+function isAdminV2 {
+    if (([Security.Principal.WindowsPrincipal](windowsIdentityInfo)).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+        echo "Admin: True"
+    } else {
+        echo "Admin: False"
+    }
+}
+
+function testUtilityFunctions {
+    write "[+] Getting Windows Identity"
+    windowsIdentityInfo
+
+    write "[+] Showing Windows Identity Groups"
+    windowsIdentityGroups
+
+    write "[+] Showing Windows Identity Name"
+    windowsIdentityName
+
+    write "[+] Checking if user is Admin"
+    isAdminV1
+    isAdminV2
+}
+
 <# Program Execution [Start] #>
 function main {
     testGetService
     testUserManipulation
     testRemoteManagement
     testFileManagement
+    testUtilityFunctions
 }
 
