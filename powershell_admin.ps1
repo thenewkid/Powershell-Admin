@@ -142,8 +142,16 @@ function createFile([String]$filename) {
     new-item -type file $filename
 }
 
+function createDirectory([String]$filename) {
+    mkdir $filename 
+}
+
 function removeFile([String]$filename) {
     rm $filename -force
+}
+
+function removeDirectory([String]$filepath) {
+    rm $filepath -recurse -force
 }
 
 function copyFile([String]$sourcePath, [String]$destinationPath) {
@@ -155,7 +163,45 @@ function renameOrMoveFile([String]$sourcePath, [String]$destinationPath) {
 }
 
 function testFileManagement {
+    write "[+] Creating file test.txt in Local Directory: replaced".replace("replaced", (pwd))
+    createFile "test.txt"
+    if (test-path "test.txt") {
+        write "[+] test.txt successfully created replaced".replace("replaced", (ls test.txt))
+        write "[+] Deleting test.txt"
+        removeFile "test.txt"
+        if (-not (test-path "test.txt")) {
+            write "[+] test.txt successfully deleted"
+        } else {
+            throw "FileNotDeletedException"
+        }
+    } else {
+        throw "FileNotCreatedException"
+    }
 
+    write "[+] Creating test directory in LocalDirectory"
+    createDirectory "testDir"
+    if (test-path "testDir") {
+        write "[+] testDir successfully created replaced".replace("replaced", (ls testDir))
+        write "[+] Deleting testDir"
+        removeDirectory "testDir"
+        if (-not (test-path "testDir")) {
+            write "[+] test.txt successfully deleted"
+        } else {
+            throw "DirectoryNotDeletedException"
+        }
+    } else {
+        throw "DirectoryNotCreatedException"
+    }
+
+    write "[+] Creating test.txt and testDir and copying test.txt to testDir"
+    createFile "test.txt"; createDirectory "testDir"
+    copyFile "test.txt" "testDir"
+    if ((test-path test.txt) -and (test-path testDir/test.txt)) {
+        echo "[+] File Successfully copied "
+        removeFile "test.txt"; removeDirectory "testDir"
+    }
+
+    
 }
 
 <# Csharp environment handler #>
