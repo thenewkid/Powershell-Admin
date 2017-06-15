@@ -1,4 +1,4 @@
-#Requires -RunAsAdministrator
+
 
 <# Exploring the depths of powershell #>
 
@@ -201,7 +201,7 @@ function testFileManagement {
         removeFile "test.txt"; removeDirectory "testDir"
     }
 
-    
+
 }
 
 <# Csharp environment handler #>
@@ -239,6 +239,10 @@ function isAdminV2 {
     }
 }
 
+function samFile {
+    ls hklm:/SAM
+}
+
 function testUtilityFunctions {
     write "[+] Getting Windows Identity"
     windowsIdentityInfo
@@ -249,17 +253,25 @@ function testUtilityFunctions {
     write "[+] Showing Windows Identity Name"
     windowsIdentityName
 
-    write "[+] Checking if user is Admin"
+    write "[+] Checking if user is Admin"1
     isAdminV1
     isAdminV2
+
+    write "[+] Showing SAM file"
+    samFile
 }
 
-<# Program Execution [Start] #>
-function main {
-    testGetService
-    testUserManipulation
-    testRemoteManagement
-    testFileManagement
-    testUtilityFunctions
+<# Docker Management #>
+function set_docker_shell([String]$shell_type) {
+    if ($shell_type -ne "cmd" -and $shell_type -ne "powershell") {
+        throw "BadShellValue Exception"
+    } elseif ($shell_type -eq "cmd") {
+        docker-machine.exe env --shell $shell_type default
+    } elseif ($shell_type -eq "powershell") {
+        docker-machine.exe env --shell $shell_type default | invoke-expression
+    } else {
+        throw "Something went wrong!!!"
+    }
 }
+
 
