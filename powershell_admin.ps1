@@ -92,6 +92,14 @@ function addRemoteHostsFromFile([String]$filepath) {
     winrm set winrm/config/client "@{TrustedHosts="'"'$linescsv'"'"}"
 }
 
+function addNewRemoteHost([String]$hostName) {
+    $hostName >> ~/global_hosts.txt
+}
+
+function update {
+    addRemoteHostsFromFile ~/global_hosts.txt
+}
+
 function showTrustedHosts {
     ls wsman:\localhost\client\TrustedHosts
 }
@@ -243,24 +251,6 @@ function samFile {
     ls hklm:/SAM
 }
 
-function testUtilityFunctions {
-    write "[+] Getting Windows Identity"
-    windowsIdentityInfo
-
-    write "[+] Showing Windows Identity Groups"
-    windowsIdentityGroups
-
-    write "[+] Showing Windows Identity Name"
-    windowsIdentityName
-
-    write "[+] Checking if user is Admin"1
-    isAdminV1
-    isAdminV2
-
-    write "[+] Showing SAM file"
-    samFile
-}
-
 <# Docker Management #>
 function set_docker_shell([String]$shell_type) {
     if ($shell_type -ne "cmd" -and $shell_type -ne "powershell") {
@@ -273,5 +263,68 @@ function set_docker_shell([String]$shell_type) {
         throw "Something went wrong!!!"
     }
 }
+
+<# Powershell utilities for gcloud-sdk #>
+function stream_logs {
+    gcloud app logs tail -s default 
+}
+
+function read_logs {
+    gcloud app logs read
+}
+
+<# Powershell gulp functions #>
+function install_gulp_dependencies ([string[]]$dependencies) {
+    foreach ($dependency in $dependencies) {
+        npm install --save $dependency
+    }
+}
+
+<# 
+    Collect all the processes every second
+    Filter which ones are increasing
+ #>
+ function monitor_processes {
+    $processes_data = @{}
+    $current_processes = $null
+    $programs_increasing = @()
+
+    while ($true) {
+        start-sleep -seconds 1
+        $current_processes = get-process
+        foreach ($process in $current_processes) {
+            $process_id = ($process.id).toString()
+            if ($processes_data.keys -contains $process_id) {
+                $current_cpu = get_process_cpu_usage $process_id
+                $process_name = get_process_name $process_id
+                if ($current_cpu -gt ([double]($processes_data[$process_id]))) {
+                    $processes_data[$process_id] = $current_cpu
+                    $programs_increasing += ("Process Name: $process_name, Process_id: $process_id, Process_cpu: $current_cpu")
+                }
+            } else {
+                start-sleep -seconds 1
+                write (("[+] New process found ") + (get_process_name $process_id))
+                $processes_data[$process_id] = (get_process_cpu_usage $process_id)
+            }
+        }
+
+        write "[+] Showing processes increasing"
+        write $programs_increasing
+        $programs_increasing.clear()
+    } 
+ }
+
+ function get_process_cpu_usage ($process_id) {
+    $cpu_usage = ((gps).where{$_.id -eq $process_id}).cpu 
+    return $cpu_usage
+ }
+
+ function get_process_name ($process_id) {
+    return ((gps).where{$_.id -eq $process_id}).processname 
+ }
+
+
+
+
 
 
