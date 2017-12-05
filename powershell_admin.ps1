@@ -1,5 +1,3 @@
-
-
 <# Exploring the depths of powershell #>
 
 <# 1. List multiple ways to extract a service by name #>
@@ -323,8 +321,9 @@ function install_gulp_dependencies ([string[]]$dependencies) {
     return ((gps).where{$_.id -eq $process_id}).processname 
  }
 
-
-
-
-
+ function show_bios {
+    $computername = $env:COMPUTERNAME
+    Get-WmiObject -class win32_bios -computername $computername
+ }
+ 
 
